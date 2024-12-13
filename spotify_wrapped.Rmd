@@ -28,7 +28,7 @@ library(purrr)
 
 ```{r}
 # Set directory for storing plots
-setwd <- "/Users/manuelacruz/Desktop/R projects/spotify_code/"
+setwd <- "/path/"
 data_folder <- "MyData/"
 ```
 

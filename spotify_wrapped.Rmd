@@ -1,0 +1,71 @@
+---
+title: "spotify_wrapped"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(plotly)
+library(knitr)
+library(gghighlight)
+library(lubridate)
+library(jsonlite)
+library(spotifyr)
+library(glue)
+library(viridis)
+library(purrr)
+```
+
+## Load Spotify data
+
+```{r}
+# Set directory for storing plots
+setwd <- "/Users/manuelacruz/Desktop/R projects/spotify_code/"
+data_folder <- "MyData/"
+```
+
+```{r}
+# Get df with full listening history, then create skipped and podcast dataframe
+totalHistory <- create_sh_df(results_dir = data_folder)
+podcast <- filter(totalHistory, !is.na(podcastName), msPlayed>=60000)
+skipped <- filter(totalHistory, msPlayed<15000)
+listened <- totalHistory %>% filter(msPlayed>15000, is.na(podcastName)) 
+
+# Don't need code below because new spotify data includes podcast column
+
+# Clean up podcasts for relistens
+#
+#listened <- rbind(listened, podcast %>% filter(artistName %in% listened$artistName))
+#podcast <- podcast %>% filter(!artistName %in% listened$artistName)
+```
+
+## Set up Spotify API
+```{r}
+Sys.setenv(SPOTIFY_CLIENT_ID="")
+Sys.setenv(SPOTIFY_CLIENT_SECRET="")
+access_token <- get_spotify_access_token()
+```
+
+## Some stats
+```{r}
+message(paste("Skipped songs:", nrow(skipped)))
+message(paste("Podcasts/songs over 10 minutes:", nrow(podcast)))
+message(paste("Total songs listened to:", nrow(listened)))
+message(paste("Unique songs listened to:", nrow(listened %>% select(artistName, trackName) %>% unique())))
+```
+
+## Expand Spotify data: reformat date, get valence values
+```{r}
+listened_metadata <- listened %>% select(artistName, trackName)
+listened <- expand_spotify_tracks(aggregated_history = listened)
+podcast <- expand_spotify_tracks(aggregated_history = podcast)
+```
+
